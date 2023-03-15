@@ -1,8 +1,8 @@
-# GPT Tools
+# GPT utility
 
 ## インストール
 ```
-pip install gpt-tools
+pip install gptutil
 ```
 
 ## 使い方
