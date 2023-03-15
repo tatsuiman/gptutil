@@ -11,7 +11,7 @@ import tiktoken
 @click.option("--max_tokens", "-M", default=1024, type=int, help="Maximum number of tokens in the output.")
 @click.option("--overwrite", "-w", is_flag=True, help="Overwrite cached result.")
 @click.option("--verbose", "-v", is_flag=True, help="Display cost information.")
-@click.argument("prompt")
+@click.argument("prompt", type=click.STRING, default="-", required=False)
 def main(model, temperature, max_tokens, overwrite, verbose, prompt):
     openai.api_key = os.environ["OPENAI_API_KEY"]
     if not openai.api_key:
