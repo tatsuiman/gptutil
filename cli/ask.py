@@ -11,7 +11,7 @@ import tiktoken
 @click.option("--max_tokens", "-M", default=1024, type=int, help="Maximum number of tokens in the output.")
 @click.option("--overwrite", "-w", is_flag=True, help="Overwrite cached result.")
 @click.option("--verbose", "-v", is_flag=True, help="Display cost information.")
-@click.argument("prompt", type=click.STRING, default="-", required=False)
+@click.argument("prompt", type=click.STRING, default="", required=False)
 def main(model, temperature, max_tokens, overwrite, verbose, prompt):
     openai.api_key = os.environ["OPENAI_API_KEY"]
     if not openai.api_key:
@@ -20,7 +20,12 @@ def main(model, temperature, max_tokens, overwrite, verbose, prompt):
 
     if not sys.stdin.isatty():
         content = sys.stdin.read()
-        prompt = f"{prompt}:\n{content}"
+        prompt = f"{prompt}\n{content}"
+
+    if prompt == "":
+        print("[You]:", end="")
+        prompt = input()
+        print("[AI]:", end="")
 
     price = 0
     cache_dir = os.path.join(os.path.expanduser("~"), ".cache", "gpt-tools")
