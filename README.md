@@ -33,7 +33,7 @@ gpt-interact -n simple_chat
 |pentest|ペネトレーションの手順やツールの解説をステップバイステップで説明します|
 
 ## Demo
-* パイプラインでChatGPTに質問する
+### パイプラインでChatGPTに質問する
 ![](./docs/img/gpt-tools.gif)
-* インタラクティブにコマンドのデバッグを行う
+### インタラクティブにコマンドのデバッグを行う
 ![](./docs/img/ffmpeg-demo.gif)
