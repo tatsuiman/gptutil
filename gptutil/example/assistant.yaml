@@ -1,0 +1,61 @@
+simple_chat:
+  user_prompt: |-
+    "{question}"
+  params:
+    - value: "question"
+      type: "each"
+      name: "質問内容"
+  history:
+    type: "file"
+    path: "~/.simple_chat_history"
+
+command_debug:
+  system_prompt: |-
+    "あなたはLinuxコマンドについての問題解決を行うアシスタントです。
+    実行環境: {environment}"
+  user_prompt: |-
+    "以下のエラーを修正して下さい。
+    実行コマンド: {command}
+    エラー内容: {error}"
+  params:
+    - value: "environment"
+      type: "once"
+      name: "実行環境"
+    - value: "command"
+      type: "each"
+      name: "実行したコマンド"
+    - value: "error"
+      type: "each"
+      name: "エラー内容"
+  history: 
+    type: "memory"
+
+pentest:
+  system_prompt: |-
+    "次のターゲットにペネトレーションテストを行う必要があります。
+    コマンドの実行手順を教えて下さい。
+    {target}"
+  user_prompt: |-
+    "以下を実行しました。次に実行するべき代表的なツール名や実行コマンドの例を出して下さい。
+    実行したコマンド: {command}
+    実行結果: {result}
+    その他の質問: {question}"
+  params:
+    - value: "target"
+      type: "once"
+      name: "ターゲット(ip,url,domainなど)"
+    - value: "command"
+      default: "まだ実行していません"
+      type: "each"
+      name: "実行したコマンド"
+    - value: "result"
+      type: "each"
+      default: "N/A"
+      name: "実行結果"
+    - value: "question"
+      type: "each"
+      name: "その他の質問"
+  history:
+    type: "file"
+    path: "~/.pentest_history"
+

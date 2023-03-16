@@ -2,17 +2,20 @@ from setuptools import setup, find_packages
 
 setup(
     name="gptutil",
-    version="0.0.3",
+    version="0.0.4",
     packages=find_packages(),
     install_requires=[
         "click",
         "openai",
-        "tiktoken"
+        "tiktoken",
+        "prompt_toolkit"
     ],
+    package_data={"gptutil": ["example/*.yaml"]},
     entry_points={
         "console_scripts": [
-            "gpt-ask=cli.ask:main",
-            "gpt-image=cli.image:main",
+            "gpt-ask=gptutil.ask:main",
+            "gpt-image=gptutil.image:main",
+            "gpt-interact=gptutil.interact:main",
         ],
     },
 )
