@@ -79,9 +79,10 @@ class CLIHandler:
         while True:
             command = session.prompt(f"[{assistant_name}] {item['name']}: ")
             command = item.get("default") if command is None else command
-            command, new_assistant = self.handle_at_command(command)
-            if new_assistant:
-                return None, new_assistant
+            if command.startswith("@"):
+                command, new_assistant = self.handle_at_command(command)
+                if new_assistant:
+                    return None, new_assistant
             if command is None:
                 continue
             if command.lower() == "exit":
