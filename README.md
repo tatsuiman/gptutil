@@ -21,6 +21,10 @@ cat samples.jsonl | gpt-ask '翻訳して' | gpt-ask 'jq を使ってrole = "use
 ```bash
 gpt-interact -n simple_chat
 ```
+または
+```bash
+gpt-interact -n simple_chat -t gptutil/example/assistant.yaml
+```
 
 自分専用のアシスタントに[カスタマイズ](gptutil/example/assistant.yaml)することも可能です
 
