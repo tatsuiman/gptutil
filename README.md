@@ -1,4 +1,5 @@
 # GPT utility
+自分だけのAIアシスタントを作成するためのコマンドユーティリティ
 
 ## インストール
 ```
@@ -20,6 +21,9 @@ cat samples.jsonl | gpt-ask '翻訳して' | gpt-ask 'jq を使ってrole = "use
 ```bash
 gpt-interact -n simple_chat
 ```
+
+自分専用のアシスタントに[カスタマイズ](gptutil/example/assistant.yaml)することも可能です
+
 |コマンド|説明|
 |---|---|
 |@use アシスタント名|アシスタントを切り替えます|
@@ -32,6 +36,7 @@ gpt-interact -n simple_chat
 |simple_chat|通常のチャットです|
 |command_debug|コマンドの実行とエラー内容を入力することで解決策を表示し続けます|
 |pentest|ペネトレーションの手順やツールの解説をステップバイステップで説明します|
+|coder|コードレビューを行うアシスタント|
 
 ## Demo
 ### パイプラインでChatGPTに質問する
