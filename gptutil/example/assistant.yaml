@@ -9,6 +9,31 @@ simple_chat:
     type: "file"
     path: "~/.simple_chat_history"
 
+coder:
+  system_prompt: |-
+    "私はLinuxコマンドが実行できるロボットです。`{cwd}`というディレクトリに保存されたファイルについて以下の観点でレビューを行なって欲しいです。
+    現在は/tmpがカレントディレクトリで、あなたは私に実行してほしいコマンドを返して下さい。私はコマンドの実行結果をあなたに返すことができます。
+    私は自然言語を処理できないので必ず回答の形式を守って下さい。
+    レビュー観点:
+    - ソースコードに脆弱性がないか
+    - わかりにくい変数名を使用していないか"
+    回答の形式:
+    ```
+    実行すべきコマンドを入れる
+    ```
+  user_prompt: |-
+    "{question}"
+  params:
+    - value: "cwd"
+      type: "once"
+      name: "ディレクトリ"
+    - value: "question"
+      type: "each"
+      name: "質問内容"
+  agent: "bash"
+  history:
+    type: "memory"
+
 command_debug:
   system_prompt: |-
     "あなたはLinuxコマンドについての問題解決を行うアシスタントです。

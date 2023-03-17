@@ -9,6 +9,7 @@ from prompt_toolkit.history import InMemoryHistory
 from prompt_toolkit.history import FileHistory
 from prompt_toolkit.completion import WordCompleter
 from .chat import Chat
+from .agent import BashAgent
 
 EXAMPLE_TEMPLATE = example_path = os.path.join(gptutil.__path__[0], "example", "assistant.yaml")
 
@@ -18,6 +19,7 @@ class CLIHandler:
         self.template = template
         self.assistant_name = None
         self.chat = Chat()
+        self.bash_agent = BashAgent()
 
     def handle_command(self, assistant_name):
         self.assistant_name = assistant_name
@@ -56,8 +58,15 @@ class CLIHandler:
                     if new_assistant:
                         return new_assistant
                     data[item["value"]] = command
-            self.chat.ask(assistant["user_prompt"].format(**data))
-            print("")
+            answer = self.chat.ask(assistant["user_prompt"].format(**data))
+            agent = assistant.get("agent")
+            if agent == "bash":
+                while True:
+                    cmd_result = self.bash_agent.run(answer)
+                    print(cmd_result)
+                    if cmd_result == "":
+                        break
+                    answer = self.chat.ask(cmd_result)
 
     def handle_at_command(self, command):
         if command.startswith("@use "):

@@ -43,15 +43,18 @@ class Chat:
             report.append(token)
             sys.stdout.write(token)
             sys.stdout.flush()
+        print("")
 
-        answer = "".join(report).strip().replace("\n", "")
+        answer = "".join(report)
         self.messages.append({"role": "assistant", "content": answer})
+        return answer
 
     def ask(self, prompt, model="gpt-3.5-turbo", temperature=0.5, max_tokens=1024):
         try:
-            self._ask(prompt, model, temperature, max_tokens)
+            return self._ask(prompt, model, temperature, max_tokens)
         except Exception as e:
             try:
-                self._ask(prompt, model, temperature, max_tokens, max_token_used=True)
+                return self._ask(prompt, model, temperature, max_tokens, max_token_used=True)
             except Exception as e:
                 print(f"リトライが上限に達したため、処理を停止します。エラー内容: {str(e)}")
+        return ""
