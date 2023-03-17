@@ -59,13 +59,13 @@ class CLIHandler:
                         return new_assistant
                     data[item["value"]] = command
             answer = self.chat.ask(assistant["user_prompt"].format(**data))
-            agent = assistant.get("agent")
-            if agent == "bash":
+            agent = assistant.get("agent", {})
+            if agent.get("name") == "bash":
                 while True:
                     cmd_result = self.bash_agent.run(answer)
-                    print(cmd_result)
+                    print("\033[32m" + cmd_result + "\033[0m")
                     if cmd_result == "":
-                        break
+                        cmd_result = agent.get("args", "")
                     answer = self.chat.ask(cmd_result)
 
     def handle_at_command(self, command):

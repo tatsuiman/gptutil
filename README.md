@@ -38,3 +38,6 @@ gpt-interact -n simple_chat
 ![](./docs/img/gpt-tools.gif)
 ### インタラクティブにコマンドのデバッグを行う
 ![](./docs/img/ffmpeg-demo.gif)
+### 自動コードレビュー
+Ctrl+Cで止めるまで動き続けます
+![](./docs/img/coder-demo.gif)
