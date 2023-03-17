@@ -10,12 +10,14 @@ from prompt_toolkit.history import FileHistory
 from prompt_toolkit.completion import WordCompleter
 from .chat import Chat
 
-EXAMPLE_TEMPLATE = example_path = os.path.join(gptutil.__path__[0], 'example', 'assistant.yaml')
+EXAMPLE_TEMPLATE = example_path = os.path.join(gptutil.__path__[0], "example", "assistant.yaml")
+
 
 class CLIHandler:
     def __init__(self, template):
         self.template = template
         self.assistant_name = None
+        self.chat = Chat()
 
     def handle_command(self, assistant_name):
         self.assistant_name = assistant_name
@@ -28,7 +30,10 @@ class CLIHandler:
         else:
             history = InMemoryHistory()
 
-        commands_completer = WordCompleter(['@use', '@reset'] + list(self.template.keys()), meta_dict={'@use': 'Switch assistant', '@who': 'Reset chat'})
+        commands_completer = WordCompleter(
+            ["@use", "@history", "@reset"] + list(self.template.keys()),
+            meta_dict={"@use": "Switch assistant", "@reset": "Reset chat", "@history": "Show chat history"},
+        )
 
         session = PromptSession(history=history, completer=commands_completer, complete_while_typing=True)
 
@@ -36,44 +41,51 @@ class CLIHandler:
         data = {}
         for item in assistant["params"]:
             if item["type"] == "once":
-                command = session.prompt(f"[{self.assistant_name}] {item['name']}: ")
-                command = item.get("default") if command is None else command  
-                new_assistant = self.handle_at_command(command)
+                command, new_assistant = self.handle_params(session, self.assistant_name, item)
                 if new_assistant:
                     return new_assistant
                 data[item["value"]] = command
             system_prompt = assistant.get("system_prompt", "").format(**data)
 
-        chat = Chat(system_prompt)
+        self.chat.set_system(system_prompt)
 
         while True:
             for item in assistant["params"]:
                 if item["type"] == "each":
-                    command, new_assistant = self.handle_each(session, self.assistant_name, item)
+                    command, new_assistant = self.handle_params(session, self.assistant_name, item)
                     if new_assistant:
                         return new_assistant
                     data[item["value"]] = command
-            chat.ask(assistant["user_prompt"].format(**data))
+            self.chat.ask(assistant["user_prompt"].format(**data))
             print("")
 
     def handle_at_command(self, command):
         if command.startswith("@use "):
             new_assistant = command[5:].strip()
             if new_assistant in self.template:
-                return new_assistant
-        if command.startswith("@reset"):
-            return self.assistant_name
-        return None
+                return command, new_assistant
+        elif command.startswith("@reset"):
+            self.chat.reset()
+            return command, self.assistant_name
+        elif command.startswith("@history"):
+            self.chat.show_history()
+            return None, None
+        else:
+            print(f"{command} not found")
+            return None, None
+        return command, None
 
-    def handle_each(self, session, assistant_name, item):
+    def handle_params(self, session, assistant_name, item):
         while True:
             command = session.prompt(f"[{assistant_name}] {item['name']}: ")
-            command = item.get("default") if command is None else command  
-            if command.lower() == "exit":
-                sys.exit()
-            new_assistant = self.handle_at_command(command)
+            command = item.get("default") if command is None else command
+            command, new_assistant = self.handle_at_command(command)
             if new_assistant:
                 return None, new_assistant
+            if command is None:
+                continue
+            if command.lower() == "exit":
+                sys.exit()
             if command.startswith("!"):
                 command = command[1:].strip()
                 if command == "":
@@ -84,7 +96,14 @@ class CLIHandler:
 
 
 @click.command()
-@click.option("-t", "--template", "template_file", type=click.File("r"), default=EXAMPLE_TEMPLATE, help="Template file in yaml format")
+@click.option(
+    "-t",
+    "--template",
+    "template_file",
+    type=click.File("r"),
+    default=EXAMPLE_TEMPLATE,
+    help="Template file in yaml format",
+)
 @click.option("-n", "--name", "assistant_name", type=str, help="Name of assistant")
 def main(template_file, assistant_name):
     template = yaml.safe_load(template_file)
@@ -95,4 +114,3 @@ def main(template_file, assistant_name):
 
 if __name__ == "__main__":
     main()
-

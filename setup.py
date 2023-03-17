@@ -5,6 +5,7 @@ setup(
     version="0.0.4",
     packages=find_packages(),
     install_requires=[
+        "retry",
         "click",
         "openai",
         "tiktoken",
