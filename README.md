@@ -1,13 +1,16 @@
 # GPT utility
-自分だけのAIアシスタントを作成するためのコマンドユーティリティ
 
-## インストール
+English | [日本語](./README.ja-JP.md)
+
+Command utility for creating your own AI assistant
+
+## Installation
 ```
 pip install gptutil
 ```
 
-## 使い方
-* パイプラインでChatGPTに質問する
+## Usage
+* Ask ChatGPT questions in a pipeline:
 ```bash
 export OPENAI_API_KEY="OpenAI API Key"
 
@@ -17,36 +20,35 @@ cat samples.jsonl | gpt-ask '翻訳して'
 cat samples.jsonl | gpt-ask '翻訳して' |jq |less
 cat samples.jsonl | gpt-ask '翻訳して' | gpt-ask 'jq を使ってrole = "user"の "content"をすべて取り出して下さい。'
 ```
-* インタラクティブにコマンドのデバッグを行う
+* Debug commands interactively:
 ```bash
 gpt-interact -n simple_chat
 ```
-または
+or
 ```bash
 gpt-interact -n simple_chat -t gptutil/example/assistant.yaml
 ```
 
-自分専用のアシスタントに[カスタマイズ](gptutil/example/assistant.yaml)することも可能です
+You can also customize your own assistant by modifying [this file](gptutil/example/assistant.yaml).
 
-|コマンド|説明|
-|---|---|
-|@use アシスタント名|アシスタントを切り替えます|
-|@history |チャット履歴を表示します。|
-|@reset|アシスタントの入力値とチャット履歴を削除します|
-|! (例：!ls -l, !bash)|質問の途中でコマンドを実行し結果を表示します。|
+|Command|Description|
+|@use AssistantName|Switches to a different assistant.|
+|@history|Displays chat history.|
+|@reset|Clears the input and chat history for the assistant.|
+|! (e.g. !ls -l, !bash)|Executes a command in the middle of a question and displays the result.
 
-|アシスタント|説明|
+|Assistant|Description|
 |---|---|
-|simple_chat|通常のチャットです|
-|command_debug|コマンドの実行とエラー内容を入力することで解決策を表示し続けます|
-|pentest|ペネトレーションの手順やツールの解説をステップバイステップで説明します|
-|coder|コードレビューを行うアシスタント|
+|simple_chat|	Normal chat.|
+|command_debug|	Displays solutions by executing commands and displaying error messages.|
+|pentest|	Explains penetration testing tools and procedures step by step.|
+|coder|	Performs code reviews.|
 
 ## Demo
-### パイプラインでChatGPTに質問する
+### Asking ChatGPT questions in a pipeline
 ![](./docs/img/gpt-tools.gif)
-### インタラクティブにコマンドのデバッグを行う
+### Debugging commands interactively
 ![](./docs/img/ffmpeg-demo.gif)
-### 自動コードレビュー
-Ctrl+Cで止めるまで動き続けます
+### Automatic code review
+Automatic code review
 ![](./docs/img/coder-demo.gif)
