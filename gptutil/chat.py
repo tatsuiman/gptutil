@@ -1,7 +1,50 @@
 import sys
 import openai
+import tiktoken
 from retry import retry
 
+class Tokenizer:
+    def __init__(self, model="gpt-3.5-turbo"):
+        self.model = model
+        self.encoding = tiktoken.encoding_for_model(model)
+
+    def split_token(self, text, chunk_size=4096):
+        tokens = self.encoding.encode(text, allowed_special="all")
+        chunks = []
+        start = 0
+        while start < len(tokens):
+            end = min(start + chunk_size, len(tokens))
+            chunk = self.encoding.decode(tokens[start:end])
+            chunks.append(chunk)
+            start = end
+        return chunks
+
+    def calc_token(self, text):
+        return len(self.encoding.encode(text, allowed_special="all"))
+
+    def calc_price(self, text):
+        # https://openai.com/pricing
+        model_price = {
+            "ada": 0.0000004,
+            "text-ada-001": 0.0000004,
+            "babbage": 0.0000005,
+            "text-babbage-001": 0.0000005,
+            "curie": 0.000002,
+            "text-curie-001": 0.000002,
+            "davinci": 0.00002,
+            "text-davinci-001": 0.00002,
+            "code-davinci-002": 0.00002,
+            "text-davinci-002": 0.00002,
+            "text-davinci-003": 0.00002,
+            "gpt-3.5-turbo": 0.000002,
+            "gpt-3.5-turbo-0301": 0.000002,
+            "gpt-4": 0.00003,
+            "gpt-4-0314": 0.00003,
+            "gpt-4-32K": 0.00006,
+            "gpt-4-32K-0314": 0.00006,
+        }
+        token_count = self.calc_token(text)
+        return token_count * model_price[model]
 
 class Chat:
     def __init__(self):
