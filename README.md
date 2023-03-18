@@ -11,15 +11,17 @@ pip install gptutil
 
 ## Usage
 * Ask ChatGPT questions in a pipeline:
+
 ```bash
 export OPENAI_API_KEY="OpenAI API Key"
 
 git clone git clone https://github.com/openai/evals/
 cp evals/evals/registry/data/test_fuzzy_match/samples.jsonl .
-cat samples.jsonl | gpt-ask '翻訳して'
-cat samples.jsonl | gpt-ask '翻訳して' |jq |less
-cat samples.jsonl | gpt-ask '翻訳して' | gpt-ask 'jq を使ってrole = "user"の "content"をすべて取り出して下さい。'
+cat samples.jsonl | gpt-ask 'Translate this.'
+cat samples.jsonl | gpt-ask 'Translate this.' |jq |less
+cat samples.jsonl | gpt-ask 'Translate this.' | gpt-ask 'Use jq to extract all "content" values with "role" equal to "user".'
 ```
+
 * Debug commands interactively:
 ```bash
 gpt-interact -n simple_chat
