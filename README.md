@@ -34,6 +34,7 @@ gpt-interact -n simple_chat -t gptutil/example/assistant.yaml
 You can also customize your own assistant by modifying [this file](gptutil/example/assistant.yaml).
 
 |Command|Description|
+|---|---|
 |@use AssistantName|Switches to a different assistant.|
 |@history|Displays chat history.|
 |@reset|Clears the input and chat history for the assistant.|
