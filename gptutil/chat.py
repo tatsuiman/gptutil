@@ -93,8 +93,8 @@ class Chat:
             temperature=self.temperature,
         )
         # メモリの準備
-        self.memory = ConversationBufferMemory(return_messages=True)
-        #self.memory = ConversationSummaryMemory(return_messages=True)
+        #self.memory = ConversationBufferMemory(return_messages=True)
+        self.memory = ConversationSummaryMemory(llm=llm, return_messages=True)
         # 会話チェーンの準備
         self.conversation = ConversationChain(memory=self.memory, prompt=prompt_template, llm=llm)
 
