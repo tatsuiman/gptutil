@@ -50,4 +50,8 @@ gpt-interact -n simple_chat -t gptutil/example/assistant.yaml
 ![](./docs/img/ffmpeg-demo.gif)
 ### 自動コードレビュー
 Ctrl+Cで止めるまで動き続けます
+```bash
+export TARGET_DIR=/path/to/project
+gpt-interact -n coder
+```
 ![](./docs/img/coder-demo.gif)

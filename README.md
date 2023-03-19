@@ -55,4 +55,8 @@ You can also customize your own assistant by modifying [this file](gptutil/examp
 ![](./docs/img/ffmpeg-demo.gif)
 ### Automatic code review
 Automatic code review
+```bash
+export TARGET_DIR=/path/to/project
+gpt-interact -n coder
+```
 ![](./docs/img/coder-demo.gif)
