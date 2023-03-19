@@ -1,6 +1,7 @@
 import os
 import re
 import sys
+import time
 import yaml
 import click
 import gptutil
@@ -46,8 +47,11 @@ class CLIHandler:
 
         history_config = assistant.get("history", {})
         if history_config.get("type") == "file":
-            history_file = history_config.get("path", "~/.gpt_interact_history")
-            history = FileHistory(os.path.expanduser(history_file))
+            history_file = os.path.expanduser(history_config.get("path", "~/.gpt_interact_history"))
+            history = FileHistory(history_file)
+            chat_log_dir = os.path.expanduser("~/.gpt_history")
+            os.makedirs(chat_log_dir, exist_ok=True)
+            self.chat.set_log_file(os.path.join(chat_log_dir, f"{assistant_name}.log"))
         else:
             history = InMemoryHistory()
 
@@ -72,7 +76,9 @@ class CLIHandler:
                     return new_assistant
                 self.data[item["name"]] = command
             if item["type"] == "static":
-                self.data[item["name"]] = replace_commands(item["value"])
+                static_value = replace_commands(item["value"])
+                self.data[item["name"]] = static_value
+                print(f"[{assistant_name}] {item['name']}: {static_value}")
             system_prompt = assistant.get("system_prompt", "").format(**self.data)
 
         self.chat.reset(system_prompt)
@@ -91,7 +97,8 @@ class CLIHandler:
                     cmd_result = self.bash_agent.run(answer)
                     print("\033[32m" + cmd_result + "\033[0m")
                     if cmd_result == "":
-                        cmd_result = agent.get("args", "")
+                        cmd_result = replace_commands(agent.get("args", ""))
+                    time.sleep(5)
                     answer = self.chat.ask(cmd_result)
 
     def handle_at_command(self, command):

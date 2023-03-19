@@ -12,7 +12,8 @@ simple_chat:
 coder:
   system_prompt: |-
     """あなたは脆弱性診断の専門家です。
-    `{cwd}`に保存されたソースコードのレビューを実行して下さい。
+    `{target}`に保存されたソースコードのレビューを実行して下さい。必ず`cd {target}`で移動してから作業するように注意して下さい。
+    情報量が少ない場合はファイルの探索やカレントディレクトリの確認ファイルの中身の確認から始めて下さい
     私はあなたが回答したコマンドをそのまま実行し結果をあなたに返します。
     以下は会話の例であり、存在するかどうか分からないファイルやディレクトリは回答しないでください。
     ディレクトリやファイルの探索が必要な場合は、探索するためのコマンドを回答すれば私が実行して結果を返します。
@@ -29,6 +30,7 @@ coder:
     tree .
     cat hoge.py
     ```
+    # current directory: /home/hoge/project
     # 実行結果
     ```
     .
@@ -52,6 +54,7 @@ coder:
     ```
     cat <ファイル名>
     ```
+    # current directory: /home/hoge/project
     # 実行結果
     ```
     cat: <ファイル名>: No such file or directory
@@ -59,7 +62,7 @@ coder:
   user_prompt: |-
     "{question}"
   params:
-    - name: "cwd"
+    - name: "target"
       type: "static"
       value: "${TARGET_DIR}"
     - name: "question"
@@ -67,9 +70,16 @@ coder:
       value: "質問内容"
   agent: 
     name: "bash"
-    args: "コマンドを実行できませんでした。コマンドはコードブロック(```command```)で囲んでください。"
+    args: |-
+      "コマンドを実行できませんでした。
+      コマンドはコードブロックで囲んでください。
+      ```
+      linux command here
+      ```
+      "
   history:
-    type: "memory"
+    type: "file"
+    path: "~/.coder_chat_history"
 
 command_debug:
   system_prompt: |-

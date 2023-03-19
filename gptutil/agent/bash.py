@@ -42,14 +42,17 @@ class BashAgent:
             stdout, stderr = shell.communicate()
             output = stdout if stdout else stderr
 
-            return f"```\n{formatted_commands}\n```\n実行結果\n```\n{output}```\n"
+            return f"```\n{formatted_commands}\n```\n#current directory: {self.current_directory}\n#実行結果\n```\n{output}```\n"
 
     def run(self, instructions):
-        commands = self.extract_commands(instructions)
         result = ""
+        try:
+            commands = self.extract_commands(instructions)
 
-        for command_block in commands:
-            output = self.execute_command_block(command_block)
-            result += output
+            for command_block in commands:
+                output = self.execute_command_block(command_block)
+                result += output
+        except Exception as e:
+            return str(e)
 
         return result

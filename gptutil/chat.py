@@ -73,6 +73,7 @@ class Chat:
         self.model = model
         self.temperature = temperature
         self.max_tokens = max_tokens
+        self.log_file = None
         self.memory = None
         self.reset()
 
@@ -93,25 +94,18 @@ class Chat:
             temperature=self.temperature,
         )
         # メモリの準備
-        #self.memory = ConversationBufferMemory(return_messages=True)
-        self.memory = ConversationSummaryMemory(llm=llm, return_messages=True)
+        self.memory = ConversationBufferMemory(return_messages=True)
+        #self.memory = ConversationSummaryMemory(llm=llm, return_messages=True)
+        #self.memory = ConversationEntityMemory(llm=llm)
         # 会話チェーンの準備
         self.conversation = ConversationChain(memory=self.memory, prompt=prompt_template, llm=llm)
+        self.messages = []
+
+    def set_log_file(self, log_file):
+        self.log_file = log_file
 
     def show_history(self):
-        messages = []
-
-        for message in self.memory.chat_memory.messages:
-            if isinstance(message, ChatMessage):
-                messages.append({"role": message.role, "content": message.content})
-            elif isinstance(message, HumanMessage):
-                messages.append({"role": "user", "content": message.content})
-            elif isinstance(message, AIMessage):
-                messages.append({"role": "assistant", "content": message.content})
-            elif isinstance(message, SystemMessage):
-                messages.append({"role": "system", "content": message.content})
-
-        for message in messages:
+        for message in self.messages:
             if message["role"] == "user":
                 print("\033[32m" + f"[{message['role']}] {message['content']}" + "\033[0m")
             elif message["role"] == "assistant":
@@ -119,7 +113,29 @@ class Chat:
             elif message["role"] == "system":
                 print("\033[31m" + f"[{message['role']}] {message['content']}" + "\033[0m")
 
+    def write_log(self):
+        if self.log_file is None:
+            return
+        with open(self.log_file, 'a') as f:
+            f.write(f"[{self.messages[-2]['role']}] {self.messages[-2]['content']}\n")
+            f.write(f"[{self.messages[-1]['role']}] {self.messages[-1]['content']}\n")
+
     def ask(self, prompt):
-        answer = self.conversation.predict(input=prompt)
-        print("")
+        answer = ""
+        try:
+            answer = self.conversation.predict(input=prompt)
+            print("")
+            for message in self.memory.chat_memory.messages:
+                if isinstance(message, ChatMessage):
+                    self.messages.append({"role": message.role, "content": message.content})
+                elif isinstance(message, HumanMessage):
+                    self.messages.append({"role": "user", "content": message.content})
+                elif isinstance(message, AIMessage):
+                    self.messages.append({"role": "assistant", "content": message.content})
+                elif isinstance(message, SystemMessage):
+                    self.messages.append({"role": "system", "content": message.content})
+            self.write_log()
+        except Exception as e:
+            return str(e)
+
         return answer
