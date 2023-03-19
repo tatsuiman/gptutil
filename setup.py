@@ -2,13 +2,12 @@ from setuptools import setup, find_packages
 
 setup(
     name="gptutil",
-    version="0.0.8",
+    version="0.0.9",
     packages=find_packages(),
     install_requires=[
-        "retry",
         "click",
-        "openai",
         "tiktoken",
+        "langchain",
         "prompt_toolkit"
     ],
     package_data={"gptutil": ["example/*.yaml"]},

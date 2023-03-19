@@ -75,7 +75,7 @@ class CLIHandler:
                 self.data[item["name"]] = replace_commands(item["value"])
             system_prompt = assistant.get("system_prompt", "").format(**self.data)
 
-        self.chat.set_system(system_prompt)
+        self.chat.reset(system_prompt)
 
         while True:
             for item in assistant["params"]:

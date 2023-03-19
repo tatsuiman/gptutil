@@ -1,7 +1,28 @@
 import sys
-import openai
 import tiktoken
-from retry import retry
+from langchain.prompts import (
+    ChatPromptTemplate,
+    MessagesPlaceholder,
+    SystemMessagePromptTemplate,
+    HumanMessagePromptTemplate,
+)
+from langchain.schema import (
+    AIMessage,
+    ChatMessage,
+    HumanMessage,
+    SystemMessage,
+)
+from langchain.callbacks.base import CallbackManager
+from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
+from langchain.chat_models import ChatOpenAI
+from langchain.chains import ConversationChain
+from langchain.memory import ConversationBufferMemory, ConversationSummaryMemory, ConversationEntityMemory
+
+# ConversationBufferMemory: 単純に会話記録を保持し、プロンプトに過去会話として入れ込むメモリです
+# ConversationSummaryMemory: 会話の要約を保存するメモリです
+# ConversationEntityMemory: 会話中の特定の事物にかんして保持するためのメモリです
+#                           欠点としては、固有名詞抽出を行っているので表記ゆれに弱いことです
+
 
 class Tokenizer:
     def __init__(self, model="gpt-3.5-turbo"):
@@ -46,19 +67,51 @@ class Tokenizer:
         token_count = self.calc_token(text)
         return token_count * model_price[model]
 
+
 class Chat:
-    def __init__(self):
-        self.messages = [{"role": "system", "content": ""}]
-        self.max_token_used = False
+    def __init__(self, model="gpt-3.5-turbo", temperature=0.5, max_tokens=1024):
+        self.model = model
+        self.temperature = temperature
+        self.max_tokens = max_tokens
+        self.memory = None
+        self.reset()
 
-    def reset(self):
-        self.messages = [{"role": "system", "content": ""}]
+    def reset(self, prompt=None):
+        # chatプロンプトテンプレートの準備
+        messages = []
+        if prompt is not None:
+            messages.append(SystemMessagePromptTemplate.from_template(prompt))
+        messages.append(MessagesPlaceholder(variable_name="history"))
+        messages.append(HumanMessagePromptTemplate.from_template("{input}"))
+        prompt_template = ChatPromptTemplate.from_messages(messages)
 
-    def set_system(self, prompt):
-        self.messages[0].update({"content": prompt})
+        # チャットモデルの準備
+        llm = ChatOpenAI(
+            streaming=True,
+            callback_manager=CallbackManager([StreamingStdOutCallbackHandler()]),
+            verbose=True,
+            temperature=self.temperature,
+        )
+        # メモリの準備
+        self.memory = ConversationBufferMemory(return_messages=True)
+        #self.memory = ConversationSummaryMemory(return_messages=True)
+        # 会話チェーンの準備
+        self.conversation = ConversationChain(memory=self.memory, prompt=prompt_template, llm=llm)
 
     def show_history(self):
-        for message in self.messages:
+        messages = []
+
+        for message in self.memory.chat_memory.messages:
+            if isinstance(message, ChatMessage):
+                messages.append({"role": message.role, "content": message.content})
+            elif isinstance(message, HumanMessage):
+                messages.append({"role": "user", "content": message.content})
+            elif isinstance(message, AIMessage):
+                messages.append({"role": "assistant", "content": message.content})
+            elif isinstance(message, SystemMessage):
+                messages.append({"role": "system", "content": message.content})
+
+        for message in messages:
             if message["role"] == "user":
                 print("\033[32m" + f"[{message['role']}] {message['content']}" + "\033[0m")
             elif message["role"] == "assistant":
@@ -66,38 +119,7 @@ class Chat:
             elif message["role"] == "system":
                 print("\033[31m" + f"[{message['role']}] {message['content']}" + "\033[0m")
 
-    @retry(tries=3, exceptions=(Exception,), delay=1, backoff=1)
-    def _ask(self, prompt, model, temperature, max_tokens, max_token_used=False):
-        if max_token_used:
-            self.messages.pop(1)
-            print("トークン数が足りません。過去の会話履歴を削除しました")
-
-        report = []
-        self.messages.append({"role": "user", "content": prompt})
-
-        for resp in openai.ChatCompletion.create(
-            model=model,
-            messages=self.messages,
-            temperature=temperature,
-            max_tokens=max_tokens,
-            stream=True,
-        ):
-            token = resp["choices"][0]["delta"].get("content", "")
-            report.append(token)
-            sys.stdout.write(token)
-            sys.stdout.flush()
+    def ask(self, prompt):
+        answer = self.conversation.predict(input=prompt)
         print("")
-
-        answer = "".join(report)
-        self.messages.append({"role": "assistant", "content": answer})
         return answer
-
-    def ask(self, prompt, model="gpt-3.5-turbo", temperature=0.5, max_tokens=1024):
-        try:
-            return self._ask(prompt, model, temperature, max_tokens)
-        except Exception as e:
-            try:
-                return self._ask(prompt, model, temperature, max_tokens, max_token_used=True)
-            except Exception as e:
-                print(f"リトライが上限に達したため、処理を停止します。エラー内容: {str(e)}")
-        return ""
