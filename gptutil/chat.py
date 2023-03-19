@@ -16,13 +16,25 @@ from langchain.callbacks.base import CallbackManager
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from langchain.chat_models import ChatOpenAI
 from langchain.chains import ConversationChain
-from langchain.memory import ConversationBufferMemory, ConversationSummaryMemory, ConversationEntityMemory
+from langchain.memory import (
+    ConversationBufferMemory,
+    ConversationSummaryMemory,
+    ConversationSummaryBufferMemory,
+    ConversationBufferWindowMemory,
+    ConversationEntityMemory,
+    ConversationKGMemory,
+)
 
 # ConversationBufferMemory: 単純に会話記録を保持し、プロンプトに過去会話として入れ込むメモリです
 # ConversationSummaryMemory: 会話の要約を保存するメモリです
 # ConversationEntityMemory: 会話中の特定の事物にかんして保持するためのメモリです
 #                           欠点としては、固有名詞抽出を行っているので表記ゆれに弱いことです
-
+BASE_PROMPT = """
+Context:
+{entities}
+Last line:
+{input}
+"""
 
 class Tokenizer:
     def __init__(self, model="gpt-3.5-turbo"):
@@ -84,6 +96,7 @@ class Chat:
             messages.append(SystemMessagePromptTemplate.from_template(prompt))
         messages.append(MessagesPlaceholder(variable_name="history"))
         messages.append(HumanMessagePromptTemplate.from_template("{input}"))
+        # messages.append(HumanMessagePromptTemplate.from_template(BASE_PROMPT))
         prompt_template = ChatPromptTemplate.from_messages(messages)
 
         # チャットモデルの準備
@@ -94,9 +107,12 @@ class Chat:
             temperature=self.temperature,
         )
         # メモリの準備
-        self.memory = ConversationBufferMemory(return_messages=True)
-        #self.memory = ConversationSummaryMemory(llm=llm, return_messages=True)
-        #self.memory = ConversationEntityMemory(llm=llm)
+        # self.memory = ConversationBufferMemory(return_messages=True)
+        # self.memory = ConversationBufferWindowMemory(return_messages=True)
+        # self.memory = ConversationSummaryMemory(llm=llm, return_messages=True)
+        self.memory = ConversationSummaryBufferMemory(llm=llm, return_messages=True)
+        # self.memory = ConversationEntityMemory(llm=llm, return_messages=True)
+        # self.memory = ConversationKGMemory(llm=llm, return_messages=True)
         # 会話チェーンの準備
         self.conversation = ConversationChain(memory=self.memory, prompt=prompt_template, llm=llm)
         self.messages = []
@@ -116,7 +132,7 @@ class Chat:
     def write_log(self):
         if self.log_file is None:
             return
-        with open(self.log_file, 'a') as f:
+        with open(self.log_file, "a") as f:
             f.write(f"[{self.messages[-2]['role']}] {self.messages[-2]['content']}\n")
             f.write(f"[{self.messages[-1]['role']}] {self.messages[-1]['content']}\n")
 
@@ -136,6 +152,6 @@ class Chat:
                     self.messages.append({"role": "system", "content": message.content})
             self.write_log()
         except Exception as e:
-            return str(e)
+            print(e)
 
         return answer

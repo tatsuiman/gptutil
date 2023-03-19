@@ -11,7 +11,7 @@ from prompt_toolkit import PromptSession
 from prompt_toolkit.history import InMemoryHistory
 from prompt_toolkit.history import FileHistory
 from prompt_toolkit.completion import WordCompleter
-from .chat import Chat
+from .chat import Chat, Tokenizer
 from .agent import BashAgent
 
 EXAMPLE_TEMPLATE = example_path = os.path.join(gptutil.__path__[0], "example", "assistant.yaml")
@@ -39,6 +39,7 @@ class CLIHandler:
         self.assistant_name = None
         self.chat = Chat()
         self.bash_agent = BashAgent()
+        self.tokenizer = Tokenizer()
         self.data = {}
 
     def handle_command(self, assistant_name):
@@ -98,6 +99,8 @@ class CLIHandler:
                     print("\033[32m" + cmd_result + "\033[0m")
                     if cmd_result == "":
                         cmd_result = replace_commands(agent.get("args", ""))
+                    if self.tokenizer.calc_token(cmd_result) > 4000:
+                        cmd_result = "実行結果の文字列が多すぎます。grepコマンドなどを使って文字数を減らして下さい。"
                     time.sleep(5)
                     answer = self.chat.ask(cmd_result)
 
