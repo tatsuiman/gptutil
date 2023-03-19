@@ -2,37 +2,72 @@ simple_chat:
   user_prompt: |-
     "{question}"
   params:
-    - value: "question"
+    - name: "question"
       type: "each"
-      name: "質問内容"
+      value: "質問内容"
   history:
     type: "file"
     path: "~/.simple_chat_history"
 
 coder:
   system_prompt: |-
-    "あなたはペネトレーションテスターです。`{cwd}`というディレクトリに保存されたファイルについて以下の観点でレビューを行なって欲しいです。
-    現在は/tmpがカレントディレクトリで、あなたは私に実行してほしいコマンド必ず(```)で囲んでコマンドを返して下さい。私はコマンドの実行結果をあなたに返すことができます。
-    例えばファイルの中身を確認する必要がある場合は、```cat 確認するべきファイル名```のように言って下さい。
-    レビュー観点:
-    - ソースコードに脆弱性がないか
-    - わかりにくい変数名を使用していないか"
-    もし分からないことがある場合は無理に回答を作り出さずに以下のコマンドを実行するように指示をください。
-    - カレントディレクトリを移動するコマンド(cd)
-    - ファイルの中身を確認するコマンド(cat)
-    - ディレクトリ構造を把握するコマンド(tree)
+    """あなたは脆弱性診断の専門家です。
+    `{cwd}`に保存されたソースコードのレビューを実行して下さい。
+    私はあなたが回答したコマンドをそのまま実行し結果をあなたに返します。
+    以下は会話の例であり、存在するかどうか分からないファイルやディレクトリは回答しないでください。
+    ディレクトリやファイルの探索が必要な場合は、探索するためのコマンドを回答すれば私が実行して結果を返します。
+    以下は会話の例です。
+    * 例えばあなたが以下のように回答したとします。
+    ```
+    cd /home/hoge/project
+    tree .
+    cat hoge.py
+    ```
+    * すると私は以下のように返します。
+    ```
+    cd /home/hoge/project
+    tree .
+    cat hoge.py
+    ```
+    # 実行結果
+    ```
+    .
+    ├── ask.cast
+    ├── coder.cast
+    ├── ffmpeg-debug.cast
+    └── img
+        ├── coder-demo.gif
+        ├── ffmpeg-demo.gif
+        └── gpt-tools.gif
+
+    1 directory, 6 files
+    import os
+    print(os.environ['HOME'])
+    ```
+    * もしあなたがこのような回答をしたとします。
+    ```
+    cat <ファイル名>
+    ```
+    * 私は回答されたコマンドをそのまま実行するので注意して下さい。
+    ```
+    cat <ファイル名>
+    ```
+    # 実行結果
+    ```
+    cat: <ファイル名>: No such file or directory
+    ```"""
   user_prompt: |-
     "{question}"
   params:
-    - value: "cwd"
-      type: "once"
-      name: "ディレクトリ"
-    - value: "question"
+    - name: "cwd"
+      type: "static"
+      value: "${TARGET_DIR}"
+    - name: "question"
       type: "each"
-      name: "質問内容"
+      value: "質問内容"
   agent: 
     name: "bash"
-    args: "他のファイルはいかがですか?"
+    args: "コマンドを実行できませんでした。コマンドはコードブロック(```command```)で囲んでください。"
   history:
     type: "memory"
 
@@ -45,15 +80,15 @@ command_debug:
     実行コマンド: {command}
     エラー内容: {error}"
   params:
-    - value: "environment"
+    - name: "environment"
       type: "once"
-      name: "実行環境"
-    - value: "command"
+      value: "実行環境"
+    - name: "command"
       type: "each"
-      name: "実行したコマンド"
-    - value: "error"
+      value: "実行したコマンド"
+    - name: "error"
       type: "each"
-      name: "エラー内容"
+      value: "エラー内容"
   history: 
     type: "memory"
 
@@ -68,20 +103,20 @@ pentest:
     実行結果: {result}
     その他の質問: {question}"
   params:
-    - value: "target"
+    - name: "target"
       type: "once"
-      name: "ターゲット(ip,url,domainなど)"
-    - value: "command"
+      value: "ターゲット(ip,url,domainなど)"
+    - name: "command"
       default: "まだ実行していません"
       type: "each"
-      name: "実行したコマンド"
-    - value: "result"
+      value: "実行したコマンド"
+    - name: "result"
       type: "each"
       default: "N/A"
-      name: "実行結果"
-    - value: "question"
+      value: "実行結果"
+    - name: "question"
       type: "each"
-      name: "その他の質問"
+      value: "その他の質問"
   history:
     type: "file"
     path: "~/.pentest_history"

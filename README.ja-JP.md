@@ -33,6 +33,7 @@ gpt-interact -n simple_chat -t gptutil/example/assistant.yaml
 |@use アシスタント名|アシスタントを切り替えます|
 |@history |チャット履歴を表示します。|
 |@reset|アシスタントの入力値とチャット履歴を削除します|
+|@params|セットされた入力ちの確認|
 |! (例：!ls -l, !bash)|質問の途中でコマンドを実行し結果を表示します。|
 
 |アシスタント|説明|

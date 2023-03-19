@@ -1,8 +1,10 @@
 import os
+import re
 import sys
 import yaml
 import click
 import gptutil
+import subprocess
 import pkg_resources
 from prompt_toolkit import PromptSession
 from prompt_toolkit.history import InMemoryHistory
@@ -13,6 +15,22 @@ from .agent import BashAgent
 
 EXAMPLE_TEMPLATE = example_path = os.path.join(gptutil.__path__[0], "example", "assistant.yaml")
 
+def replace_commands(input_str):
+    def replace_env_var(match):
+        return os.environ.get(match.group(1), '')
+
+    def replace_command(match):
+        try:
+            result = subprocess.check_output(match.group(1), shell=True, text=True)
+            return result.strip()
+        except subprocess.CalledProcessError:
+            return ''
+
+    # 環境変数を置き換える
+    replaced_str = re.sub(r'\${(\w+)}', replace_env_var, input_str)
+    # コマンドを置き換える
+    replaced_str = re.sub(r'`(\w+)`', replace_command, replaced_str)
+    return replaced_str
 
 class CLIHandler:
     def __init__(self, template):
@@ -20,6 +38,7 @@ class CLIHandler:
         self.assistant_name = None
         self.chat = Chat()
         self.bash_agent = BashAgent()
+        self.data = {}
 
     def handle_command(self, assistant_name):
         self.assistant_name = assistant_name
@@ -33,21 +52,28 @@ class CLIHandler:
             history = InMemoryHistory()
 
         commands_completer = WordCompleter(
-            ["@use", "@history", "@reset"] + list(self.template.keys()),
-            meta_dict={"@use": "Switch assistant", "@reset": "Reset chat", "@history": "Show chat history"},
+            ["@use", "@history", "@reset", "@params"] + list(self.template.keys()),
+            meta_dict={
+                "@use": "Switch assistant",
+                "@reset": "Reset chat",
+                "@history": "Show chat history",
+                "@params": "Show params",
+            },
         )
 
         session = PromptSession(history=history, completer=commands_completer, complete_while_typing=True)
 
         system_prompt = None
-        data = {}
+        self.data = {}
         for item in assistant["params"]:
             if item["type"] == "once":
                 command, new_assistant = self.handle_params(session, self.assistant_name, item)
                 if new_assistant:
                     return new_assistant
-                data[item["value"]] = command
-            system_prompt = assistant.get("system_prompt", "").format(**data)
+                self.data[item["name"]] = command
+            if item["type"] == "static":
+                self.data[item["name"]] = replace_commands(item["value"])
+            system_prompt = assistant.get("system_prompt", "").format(**self.data)
 
         self.chat.set_system(system_prompt)
 
@@ -57,8 +83,8 @@ class CLIHandler:
                     command, new_assistant = self.handle_params(session, self.assistant_name, item)
                     if new_assistant:
                         return new_assistant
-                    data[item["value"]] = command
-            answer = self.chat.ask(assistant["user_prompt"].format(**data))
+                    self.data[item["name"]] = command
+            answer = self.chat.ask(assistant["user_prompt"].format(**self.data))
             agent = assistant.get("agent", {})
             if agent.get("name") == "bash":
                 while True:
@@ -79,6 +105,11 @@ class CLIHandler:
         elif command.startswith("@history"):
             self.chat.show_history()
             return None, None
+        elif command.startswith("@params"):
+            for key in self.data.keys():
+                value = self.data[key]
+                print(f"{key}: {value}")
+            return None, None
         else:
             print(f"{command} not found")
             return None, None
@@ -86,7 +117,7 @@ class CLIHandler:
 
     def handle_params(self, session, assistant_name, item):
         while True:
-            command = session.prompt(f"[{assistant_name}] {item['name']}: ")
+            command = session.prompt(f"[{assistant_name}] {item['value']}: ")
             command = item.get("default") if command is None else command
             if command.startswith("@"):
                 command, new_assistant = self.handle_at_command(command)

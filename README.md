@@ -38,6 +38,7 @@ You can also customize your own assistant by modifying [this file](gptutil/examp
 |@use AssistantName|Switches to a different assistant.|
 |@history|Displays chat history.|
 |@reset|Clears the input and chat history for the assistant.|
+|@params| Show set assistant paramaters|
 |! (e.g. !ls -l, !bash)|Executes a command in the middle of a question and displays the result.
 
 |Assistant|Description|
