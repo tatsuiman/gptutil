@@ -5,6 +5,7 @@ import click
 import openai
 from .chat import Tokenizer
 
+
 @click.command()
 @click.option("--model", "-m", default="gpt-3.5-turbo", help="Model to use for translation.")
 @click.option("--temperature", "-t", default=0.7, type=float, help="Temperature for sampling.")
@@ -24,7 +25,7 @@ def main(model, temperature, max_tokens, chunk_size, overwrite, verbose, prompt)
     std_in = ""
     if not sys.stdin.isatty():
         std_in = sys.stdin.read()
-        prompt_token_size = tokenizer.calc_token(prompt+"\n")
+        prompt_token_size = tokenizer.calc_token(prompt + "\n")
         chunk_size = chunk_size - prompt_token_size
         contents = [f"{prompt}\n{content}" for content in tokenizer.split_token(std_in, chunk_size)]
     else:
@@ -65,6 +66,7 @@ def main(model, temperature, max_tokens, chunk_size, overwrite, verbose, prompt)
                 cache_file.write(token)
                 sys.stdout.write(token)
                 sys.stdout.flush()
+
 
 if __name__ == "__main__":
     main()

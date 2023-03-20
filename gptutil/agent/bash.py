@@ -10,7 +10,7 @@ class BashAgent:
         self.command_history = []
 
     def extract_commands(self, text):
-        return re.findall(r'```\n(.*?)\n```', text, re.DOTALL)
+        return re.findall(r"```\n(.*?)\n```", text, re.DOTALL)
 
     def execute_single_command(self, command, shell):
         command_parts = command.split(" ")
@@ -32,7 +32,15 @@ class BashAgent:
         self.command_history.append(command)
 
     def execute_command_block(self, command_block):
-        with subprocess.Popen(["bash"], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=self.environment, cwd=self.current_directory) as shell:
+        with subprocess.Popen(
+            ["bash"],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            env=self.environment,
+            cwd=self.current_directory,
+        ) as shell:
             command_lines = command_block.split("\n")
             formatted_commands = "\n".join([f"$ {cmd}" for cmd in command_lines])
 

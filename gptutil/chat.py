@@ -36,6 +36,7 @@ Last line:
 {input}
 """
 
+
 class Tokenizer:
     def __init__(self, model="gpt-3.5-turbo"):
         self.model = model

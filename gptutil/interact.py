@@ -16,22 +16,24 @@ from .agent import BashAgent
 
 EXAMPLE_TEMPLATE = example_path = os.path.join(gptutil.__path__[0], "example", "assistant.yaml")
 
+
 def replace_commands(input_str):
     def replace_env_var(match):
-        return os.environ.get(match.group(1), '')
+        return os.environ.get(match.group(1), "")
 
     def replace_command(match):
         try:
             result = subprocess.check_output(match.group(1), shell=True, text=True)
             return result.strip()
         except subprocess.CalledProcessError:
-            return ''
+            return ""
 
     # 環境変数を置き換える
-    replaced_str = re.sub(r'\${(\w+)}', replace_env_var, input_str)
+    replaced_str = re.sub(r"\${(\w+)}", replace_env_var, input_str)
     # コマンドを置き換える
-    replaced_str = re.sub(r'`(\w+)`', replace_command, replaced_str)
+    replaced_str = re.sub(r"`(\w+)`", replace_command, replaced_str)
     return replaced_str
+
 
 class CLIHandler:
     def __init__(self, template):
