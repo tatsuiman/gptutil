@@ -18,23 +18,23 @@ coder:
     私はあなたが回答したコマンドをそのまま実行し結果をあなたに返します。
     以下は会話の例であり、存在するかどうか分からないファイルやディレクトリは回答しないでください。
     ディレクトリやファイルの探索が必要な場合は、探索するためのコマンドを回答すれば私が実行して結果を返します。
-    探索回数をできるだけ少なくできるように```grep -r -i password .```のようなコマンドを提案するようにして下さい。
+    探索回数をできるだけ少なくできるように```bash\ngrep -r -i password .\n```のようなコマンドを提案するようにして下さい。
     以下は会話の例です。
     * 例えばあなたが以下のように回答したとします。
-    ```
+    ```bash
     cd /home/hoge/project
     tree .
     cat hoge.py
     ```
     * すると私は以下のように返します。
-    ```
+    ```bash
     cd /home/hoge/project
     tree .
     cat hoge.py
     ```
     # current directory: /home/hoge/project
     # 実行結果
-    ```
+    ```bash
     .
     ├── ask.cast
     ├── coder.cast
@@ -49,17 +49,17 @@ coder:
     print(os.environ['HOME'])
     ```
     * もしあなたがこのような回答をしたとします。
-    ```
+    ```bash
     cat <ファイル名>
     ```
     * 私は回答されたコマンドをそのまま実行するため以下のように失敗してしまいます。
-    ```
+    ```bash
     cat <ファイル名>
     $ cat /etc/passwd
     ```
     # current directory: /home/hoge/project
     # 実行結果
-    ```
+    ```bash
     cat: <ファイル名>: No such file or directory
     bash $: command not found
     ```"""
@@ -73,7 +73,7 @@ coder:
       type: "each"
       value: "始めましょう"
   agent: 
-    name: "bash"
+    name: "code"
     args: |-
       "コマンドを実行できませんでした。
       grepコマンドを使ってもう少しよく探索してみて下さい。

@@ -3,14 +3,30 @@ import os
 import subprocess
 
 
-class BashAgent:
+class CodeAgent:
     def __init__(self):
         self.environment = os.environ.copy()
         self.current_directory = os.getcwd()
         self.command_history = []
 
+    def extract_code_block(self, text):
+        return re.findall(r"```python\n(.*?)\n```", text, re.DOTALL)
+
     def extract_commands(self, text):
-        return re.findall(r"```\n(.*?)\n```", text, re.DOTALL)
+        return re.findall(r"```bash\n(.*?)\n```", text, re.DOTALL)
+
+    def execute_code_block(self, code_block):
+        result = ""
+        # ランダムなファイル名で一時ファイルを作成
+        with tempfile.NamedTemporaryFile(mode='w', delete=False) as f:
+            filename = f.name
+            # 一時ファイルにコードブロックを書き込む
+            f.write(code_block)
+        # pythonコマンドから一時ファイルを実行し、標準出力を受け取る
+        result = subprocess.check_output(["python", filename]).decode().strip()
+        # 一時ファイルを削除する
+        os.remove(filename)
+        return f"# python 実行結果\n```\n{result}\n```"
 
     def execute_single_command(self, command, shell):
         command_parts = command.split(" ")
@@ -57,9 +73,15 @@ class BashAgent:
         try:
             commands = self.extract_commands(instructions)
 
+            # bashのコマンドブロックを抽出し、それぞれを実行する
             for command_block in commands:
                 output = self.execute_command_block(command_block)
                 result += output
+
+            # pythonのコードブロックを抽出し、それぞれを実行する
+            for code_block in self.extract_code_block(instructions):
+                result += self.execute_code_block(code_block) + "\n"
+
         except Exception as e:
             return str(e)
 

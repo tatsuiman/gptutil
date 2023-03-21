@@ -12,7 +12,7 @@ from prompt_toolkit.history import InMemoryHistory
 from prompt_toolkit.history import FileHistory
 from prompt_toolkit.completion import WordCompleter
 from .chat import Chat, Tokenizer
-from .agent import BashAgent
+from .agent import CodeAgent
 
 EXAMPLE_TEMPLATE = example_path = os.path.join(gptutil.__path__[0], "example", "assistant.yaml")
 
@@ -40,7 +40,7 @@ class CLIHandler:
         self.template = template
         self.assistant_name = None
         self.chat = Chat()
-        self.bash_agent = BashAgent()
+        self.code_agent = CodeAgent()
         self.tokenizer = Tokenizer()
         self.data = {}
 
@@ -95,9 +95,9 @@ class CLIHandler:
                     self.data[item["name"]] = command
             answer = self.chat.ask(assistant["user_prompt"].format(**self.data))
             agent = assistant.get("agent", {})
-            if agent.get("name") == "bash":
+            if agent.get("name") == "code":
                 while True:
-                    cmd_result = self.bash_agent.run(answer)
+                    cmd_result = self.code_agent.run(answer)
                     print("\033[32m" + cmd_result + "\033[0m")
                     if cmd_result == "":
                         cmd_result = replace_commands(agent.get("args", ""))
