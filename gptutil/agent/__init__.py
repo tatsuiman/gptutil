@@ -1,1 +1,1 @@
-from .bash import BashAgent
+from .code import CodeAgent
