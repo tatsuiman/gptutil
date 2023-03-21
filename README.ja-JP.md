@@ -41,17 +41,9 @@ gpt-interact -n simple_chat -t gptutil/example/assistant.yaml
 |simple_chat|通常のチャットです|
 |command_debug|コマンドの実行とエラー内容を入力することで解決策を表示し続けます|
 |pentest|ペネトレーションの手順やツールの解説をステップバイステップで説明します|
-|coder|コードレビューを行うアシスタント|
 
 ## Demo
 ### パイプラインでChatGPTに質問する
 ![](./docs/img/gpt-tools.gif)
 ### インタラクティブにコマンドのデバッグを行う
 ![](./docs/img/ffmpeg-demo.gif)
-### 自動コードレビュー
-Ctrl+Cで止めるまで動き続けます
-```bash
-export TARGET_DIR=/path/to/project
-gpt-interact -n coder
-```
-![](./docs/img/coder-demo.gif)

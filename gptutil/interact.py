@@ -102,7 +102,7 @@ class CLIHandler:
                     if cmd_result == "":
                         cmd_result = replace_commands(agent.get("args", ""))
                     if self.tokenizer.calc_token(cmd_result) > 2000:
-                        cmd_result = "実行結果の文字列が多すぎます。一度に複数のファイルを読み込んだりしないでください。"
+                        cmd_result = "There are too many strings in the execution result. Do not read more than one file at a time!"
                     time.sleep(5)
                     answer = self.chat.ask(cmd_result)
 

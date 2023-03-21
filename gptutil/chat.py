@@ -110,10 +110,10 @@ class Chat:
         )
         # メモリの準備
         # self.memory = ConversationBufferMemory(return_messages=True)
-        # self.memory = ConversationBufferWindowMemory(return_messages=True)
+        self.memory = ConversationBufferWindowMemory(return_messages=True)
         # self.memory = ConversationSummaryMemory(llm=llm, return_messages=True)
-        self.memory = ConversationSummaryBufferMemory(llm=llm, return_messages=True)
-        #self.memory = ConversationEntityMemory(llm=llm, return_messages=True)
+        # self.memory = ConversationSummaryBufferMemory(llm=llm, return_messages=True)
+        # self.memory = ConversationEntityMemory(llm=llm, return_messages=True)
         # self.memory = ConversationKGMemory(llm=llm, return_messages=True)
         # 会話チェーンの準備
         self.conversation = ConversationChain(memory=self.memory, prompt=prompt_template, llm=llm)

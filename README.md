@@ -46,17 +46,9 @@ You can also customize your own assistant by modifying [this file](gptutil/examp
 |simple_chat|	Normal chat.|
 |command_debug|	Displays solutions by executing commands and displaying error messages.|
 |pentest|	Explains penetration testing tools and procedures step by step.|
-|coder|	Performs code reviews.|
 
 ## Demo
 ### Asking ChatGPT questions in a pipeline
 ![](./docs/img/gpt-tools.gif)
 ### Debugging commands interactively
 ![](./docs/img/ffmpeg-demo.gif)
-### Automatic code review
-Automatic code review
-```bash
-export TARGET_DIR=/path/to/project
-gpt-interact -n coder
-```
-![](./docs/img/coder-demo.gif)

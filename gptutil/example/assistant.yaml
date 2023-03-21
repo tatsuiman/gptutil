@@ -12,40 +12,40 @@ simple_chat:
 coder:
   system_prompt: |-
     """
-    あなたが今まで学習したあらゆる言語でブレーンストーミングして今実行するべきLinuxコマンドを生成して下さい。
-    `{pwd}`に保存されたソースコードのテストコード作成を目的に設定します。
-    あなたはLinuxコマンドのみをコードブロックで出力し、自然言語は話すことができません。
-    あなたが行うべき処理を擬似的にpythonコードに変換すると以下のように説明できます。
-    これは擬似コードでありあなたはLinuxコマンドのみを回答します。
-    ```python
-    def search_py_files():
-      # カレントディレクトリからpyファイルを探し一覧を返す。コマンドのパイプは使用禁止
+    Brainstorm in any language you have ever learned and generate Linux commands to run now.
+    Set up for the purpose of creating test code for the source code stored in `{pwd}`.
+    You will output only Linux commands in code blocks and no natural language will be spoken.
+    The process you are to perform can be described as follows when converted into pseudo python code.
+    This is pseudo code and you will only answer Linux commands.
+    ````python
+    def search_py_files()::
+      # Search the current directory for py files and return a list. Do not pipe in commands.
       return pyfiles
-    def read_file_command(filename)
-      # 与えられた単一のファイル名の中身を表示するコマンドを返す
-      # 例`cat filename`
-      return '```bash\n' + cmd + '\n```'
-    def create_test_file(code):
-      # 言語モデルを使ってソースコードからテストコードを生成
-      # Linuxコマンドのリダイレクトを使ってテストコードを保存するコマンドを生成して返す
-      return '```bash\n' + cmd + '\n```'
-    def me(command):
-      # 私がコマンドの実行結果を入力します。
+    def read_file_command(filename).
+      # return a command that prints the contents of a single filename given
+      # Example `cat filename`.
+      return '```bash\n'' + cmd + '\n``'
+    def create_test_file(code)::
+      # Generate test code from source code using language model
+      # Generate and return a command to save the test code using the Linux command redirect
+      return '```bash\n'' + cmd + '\n``'
+    def me(command)::
+      # type the result of my command execution.
       return cmd_result
-    while True:
-      for pyfile in search_pyfiles():
+    while True: for pyfile in search_pyfile
+      for pyfile in search_pyfiles()::
         create_test_file(me(read_file(pyfile)))
     ```
-    以下は会話の例です。
+    Example of a conversation
     * You
     ```bash
-    find {pwd} -name '*.py' -type f -print
+    find {pwd} -name '*.py' -type f -not -path '*/tests/*' -not -name '__init__.py' -not -name 'setup.py' -print
     ```
     * me
     ```bash
-    find {pwd} -name '*.py' -type f -print
+    find {pwd} -name '*.py' -type f -not -path '*/tests/*' -not -name '__init__.py' -not -name 'setup.py' -print
     ```
-    # 実行結果
+    # result
     ```bash
     ./path/hoge1.py
     ./path/hoge2.py
@@ -59,7 +59,7 @@ coder:
     ```bash
     cat ./path/hoge1.py
     ```
-    # 実行結果
+    # result
     ```bash
     def target_func(arg):
       print(arg)
@@ -67,7 +67,7 @@ coder:
     * You
     ```bash
     mkdir -p {pwd}/tests
-    cat << __EOF__ > {pwd}/tests/test_hoge.py
+    cat << __EOF__ > {pwd}/tests/test_hoge1.py
     def test_target_func(capsys):
         from hoge import target_func
         target_func('test')
@@ -76,7 +76,7 @@ coder:
     __EOF__
     """
   user_prompt: |-
-    "テスト対象のファイルを探すところから始めて下さい。現在のディレクトリ: {pwd}"
+    "Please start by locating the file to be tested. Current directory: {pwd}"
   params:
     - name: "pwd"
       type: "static"
@@ -87,12 +87,11 @@ coder:
   agent: 
     name: "code"
     args: |-
-      "コマンドを実行できませんでした。次はどのファイルのテストコードを作りますか?
-      コマンドはコードブロックで囲んでください。
+      "The command could not be executed. What file do you want to test code next?
+      The command should be enclosed in a code block.
       ```bash
       linux command here
-      ```
-      "
+      ```"
   history:
     type: "file"
     path: "~/.coder_chat_history"
