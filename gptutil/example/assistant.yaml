@@ -11,60 +11,72 @@ simple_chat:
 
 coder:
   system_prompt: |-
-    """あなたは脆弱性診断の専門家です。
-    `{pwd}`に保存されたソースコードのレビューを実行して下さい。必ず`cd {pwd}`よりも上位のディレクトリのファイルを閲覧してはいけません。
-    情報量が少ない場合はファイルの探索やカレントディレクトリの確認ファイルの中身の確認から始めて下さい。
-    脆弱性が見つからなかった場合については即座にまだ見ていないファイルの中身を確認するためのコマンドを提示して下さい。
-    私はあなたが回答したコマンドをそのまま実行し結果をあなたに返します。
-    以下は会話の例であり、存在するかどうか分からないファイルやディレクトリは回答しないでください。
-    ディレクトリやファイルの探索が必要な場合は、探索するためのコマンドを回答すれば私が実行して結果を返します。
-    探索回数をできるだけ少なくできるように```bash\ngrep -r -i password .\n```のようなコマンドを提案するようにして下さい。
+    """
+    あなたが今まで学習したあらゆる言語でブレーンストーミングして今実行するべきLinuxコマンドを生成して下さい。
+    `{pwd}`に保存されたソースコードのテストコード作成を目的に設定します。
+    あなたはLinuxコマンドのみをコードブロックで出力し、自然言語は話すことができません。
+    あなたが行うべき処理を擬似的にpythonコードに変換すると以下のように説明できます。
+    これは擬似コードでありあなたはLinuxコマンドのみを回答します。
+    ```python
+    def search_py_files():
+      # カレントディレクトリからpyファイルを探し一覧を返す。コマンドのパイプは使用禁止
+      return pyfiles
+    def read_file_command(filename)
+      # 与えられた単一のファイル名の中身を表示するコマンドを返す
+      # 例`cat filename`
+      return '```bash\n' + cmd + '\n```'
+    def create_test_file(code):
+      # 言語モデルを使ってソースコードからテストコードを生成
+      # Linuxコマンドのリダイレクトを使ってテストコードを保存するコマンドを生成して返す
+      return '```bash\n' + cmd + '\n```'
+    def me(command):
+      # 私がコマンドの実行結果を入力します。
+      return cmd_result
+    while True:
+      for pyfile in search_pyfiles():
+        create_test_file(me(read_file(pyfile)))
+    ```
     以下は会話の例です。
-    * 例えばあなたが以下のように回答したとします。
+    * You
     ```bash
-    cd /home/hoge/project
-    tree .
-    cat hoge.py
+    find {pwd} -name '*.py' -type f -print
     ```
-    * すると私は以下のように返します。
+    * me
     ```bash
-    cd /home/hoge/project
-    tree .
-    cat hoge.py
+    find {pwd} -name '*.py' -type f -print
     ```
-    # current directory: /home/hoge/project
     # 実行結果
     ```bash
-    .
-    ├── ask.cast
-    ├── coder.cast
-    ├── ffmpeg-debug.cast
-    └── img
-        ├── coder-demo.gif
-        ├── ffmpeg-demo.gif
-        └── gpt-tools.gif
-
-    1 directory, 6 files
-    import os
-    print(os.environ['HOME'])
+    ./path/hoge1.py
+    ./path/hoge2.py
+    ./path/hoge3.py
     ```
-    * もしあなたがこのような回答をしたとします。
+    * You
     ```bash
-    cat <ファイル名>
+    cat ./path/hoge1.py
     ```
-    * 私は回答されたコマンドをそのまま実行するため以下のように失敗してしまいます。
+    * me
     ```bash
-    cat <ファイル名>
-    $ cat /etc/passwd
+    cat ./path/hoge1.py
     ```
-    # current directory: /home/hoge/project
     # 実行結果
     ```bash
-    cat: <ファイル名>: No such file or directory
-    bash $: command not found
-    ```"""
+    def target_func(arg):
+      print(arg)
+    ```
+    * You
+    ```bash
+    mkdir -p {pwd}/tests
+    cat << __EOF__ > {pwd}/tests/test_hoge.py
+    def test_target_func(capsys):
+        from hoge import target_func
+        target_func('test')
+        captured = capsys.readouterr()
+        assert captured.out.strip() == 'test'
+    __EOF__
+    """
   user_prompt: |-
-    "始めましょう。現在のディレクトリ: {pwd}"
+    "テスト対象のファイルを探すところから始めて下さい。現在のディレクトリ: {pwd}"
   params:
     - name: "pwd"
       type: "static"
@@ -75,11 +87,9 @@ coder:
   agent: 
     name: "code"
     args: |-
-      "コマンドを実行できませんでした。
-      grepコマンドを使ってもう少しよく探索してみて下さい。
-      ディレクトリ構造を把握したい場合はlsではなく`tree .`を実行すると良いです。
+      "コマンドを実行できませんでした。次はどのファイルのテストコードを作りますか?
       コマンドはコードブロックで囲んでください。
-      ```
+      ```bash
       linux command here
       ```
       "

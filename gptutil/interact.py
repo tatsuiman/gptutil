@@ -101,8 +101,8 @@ class CLIHandler:
                     print("\033[32m" + cmd_result + "\033[0m")
                     if cmd_result == "":
                         cmd_result = replace_commands(agent.get("args", ""))
-                    if self.tokenizer.calc_token(cmd_result) > 4000:
-                        cmd_result = "実行結果の文字列が多すぎます。grepコマンドなどを使って文字数を減らして下さい。"
+                    if self.tokenizer.calc_token(cmd_result) > 2000:
+                        cmd_result = "実行結果の文字列が多すぎます。一度に複数のファイルを読み込んだりしないでください。"
                     time.sleep(5)
                     answer = self.chat.ask(cmd_result)
 

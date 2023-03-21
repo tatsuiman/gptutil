@@ -82,7 +82,7 @@ class Tokenizer:
 
 
 class Chat:
-    def __init__(self, model="gpt-3.5-turbo", temperature=0.5, max_tokens=1024):
+    def __init__(self, model="gpt-3.5-turbo", temperature=0, max_tokens=2048):
         self.model = model
         self.temperature = temperature
         self.max_tokens = max_tokens
@@ -97,7 +97,7 @@ class Chat:
             messages.append(SystemMessagePromptTemplate.from_template(prompt))
         messages.append(MessagesPlaceholder(variable_name="history"))
         messages.append(HumanMessagePromptTemplate.from_template("{input}"))
-        # messages.append(HumanMessagePromptTemplate.from_template(BASE_PROMPT))
+        #messages.append(HumanMessagePromptTemplate.from_template(BASE_PROMPT))
         prompt_template = ChatPromptTemplate.from_messages(messages)
 
         # チャットモデルの準備
@@ -105,6 +105,7 @@ class Chat:
             streaming=True,
             callback_manager=CallbackManager([StreamingStdOutCallbackHandler()]),
             verbose=True,
+            max_tokens=self.max_tokens,
             temperature=self.temperature,
         )
         # メモリの準備
@@ -112,7 +113,7 @@ class Chat:
         # self.memory = ConversationBufferWindowMemory(return_messages=True)
         # self.memory = ConversationSummaryMemory(llm=llm, return_messages=True)
         self.memory = ConversationSummaryBufferMemory(llm=llm, return_messages=True)
-        # self.memory = ConversationEntityMemory(llm=llm, return_messages=True)
+        #self.memory = ConversationEntityMemory(llm=llm, return_messages=True)
         # self.memory = ConversationKGMemory(llm=llm, return_messages=True)
         # 会話チェーンの準備
         self.conversation = ConversationChain(memory=self.memory, prompt=prompt_template, llm=llm)

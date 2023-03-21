@@ -1,7 +1,7 @@
 import re
 import os
+import tempfile
 import subprocess
-
 
 class CodeAgent:
     def __init__(self):
@@ -16,6 +16,7 @@ class CodeAgent:
         return re.findall(r"```bash\n(.*?)\n```", text, re.DOTALL)
 
     def execute_code_block(self, code_block):
+        os.chdir(self.current_directory)
         result = ""
         # ランダムなファイル名で一時ファイルを作成
         with tempfile.NamedTemporaryFile(mode='w', delete=False) as f:
@@ -26,7 +27,7 @@ class CodeAgent:
         result = subprocess.check_output(["python", filename]).decode().strip()
         # 一時ファイルを削除する
         os.remove(filename)
-        return f"# python 実行結果\n```\n{result}\n```"
+        return f"\n#current directory: {self.current_directory}\n# python 実行結果\n```\n{result}\n```"
 
     def execute_single_command(self, command, shell):
         command_parts = command.split(" ")
@@ -58,7 +59,7 @@ class CodeAgent:
             cwd=self.current_directory,
         ) as shell:
             command_lines = command_block.split("\n")
-            formatted_commands = "\n".join([f"$ {cmd}" for cmd in command_lines])
+            formatted_commands = "\n".join(command_lines)
 
             for command in command_lines:
                 self.execute_single_command(command, shell)
