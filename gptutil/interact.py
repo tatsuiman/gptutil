@@ -10,11 +10,31 @@ import pkg_resources
 from prompt_toolkit import PromptSession
 from prompt_toolkit.history import InMemoryHistory
 from prompt_toolkit.history import FileHistory
-from prompt_toolkit.completion import WordCompleter
+from prompt_toolkit.completion import Completer, Completion, WordCompleter, merge_completers
 from .chat import Chat, Tokenizer
 from .agent import CodeAgent
 
 EXAMPLE_TEMPLATE = example_path = os.path.join(gptutil.__path__[0], "example", "assistant.yaml")
+EXAMPLE_SNIPPET = example_path = os.path.join(gptutil.__path__[0], "example", "snippet.yaml")
+
+
+class SnippetCompleter(Completer):
+    def __init__(self, snippets):
+        self.snippets = snippets
+
+    def get_completions(self, document, complete_event):
+        word_before_cursor = document.get_word_before_cursor(WORD=True)
+        for prefix, body in self.snippets.items():
+            if prefix.startswith(word_before_cursor):
+                yield Completion(body["prompt"], start_position=-len(word_before_cursor))
+
+def expand_and_fill_template(user_input, session):
+    matches = re.finditer(r'\$\d+', user_input)
+    for match in list(matches):
+        placeholder = match.group(0)
+        replacement = session.prompt(f"Enter value for {placeholder}: ")
+        user_input = user_input[:match.start()] + replacement + user_input[match.end():]
+    return user_input
 
 
 def replace_commands(input_str):
@@ -36,8 +56,9 @@ def replace_commands(input_str):
 
 
 class CLIHandler:
-    def __init__(self, template):
+    def __init__(self, snippets, template):
         self.template = template
+        self.snippets = snippets
         self.assistant_name = None
         self.chat = Chat()
         self.code_agent = CodeAgent()
@@ -67,8 +88,10 @@ class CLIHandler:
                 "@params": "Show params",
             },
         )
+        snippet_completer = SnippetCompleter(self.snippets)
+        completer = merge_completers([commands_completer, snippet_completer])
 
-        session = PromptSession(history=history, completer=commands_completer, complete_while_typing=True)
+        session = PromptSession(history=history, completer=completer, complete_while_typing=True)
 
         system_prompt = None
         self.data = {}
@@ -130,6 +153,7 @@ class CLIHandler:
     def handle_params(self, session, assistant_name, item):
         while True:
             command = session.prompt(f"[{assistant_name}] {item['value']}: ")
+            command = expand_and_fill_template(command, session)
             command = item.get("default") if command is None else command
             if command.startswith("@"):
                 command, new_assistant = self.handle_at_command(command)
@@ -150,6 +174,14 @@ class CLIHandler:
 
 @click.command()
 @click.option(
+    "-s",
+    "--snippet",
+    "snippet_file",
+    type=click.File("r"),
+    default=EXAMPLE_SNIPPET,
+    help="Snippet file in yaml format",
+)
+@click.option(
     "-t",
     "--template",
     "template_file",
@@ -158,9 +190,10 @@ class CLIHandler:
     help="Template file in yaml format",
 )
 @click.option("-n", "--name", "assistant_name", type=str, help="Name of assistant")
-def main(template_file, assistant_name):
+def main(snippet_file, template_file, assistant_name):
     template = yaml.safe_load(template_file)
-    handler = CLIHandler(template)
+    snippets = yaml.safe_load(snippet_file)
+    handler = CLIHandler(snippets, template)
     while True:
         assistant_name = handler.handle_command(assistant_name)
 
