@@ -24,14 +24,20 @@ class SnippetCompleter(Completer):
 
     def get_completions(self, document, complete_event):
         word_before_cursor = document.get_word_before_cursor(WORD=True)
-        for prefix, body in self.snippets.items():
+        for prompt in self.snippets["prompts"]:
+            prefix = prompt["prefix"]
+            body = prompt["body"]
             if prefix.startswith(word_before_cursor):
-                yield Completion(body["prompt"], start_position=-len(word_before_cursor))
+                yield Completion(body, start_position=-len(word_before_cursor))
 
 def expand_and_fill_template(user_input, session):
-    matches = re.finditer(r'\$\d+', user_input)
-    for match in list(matches):
-        placeholder = match.group(0)
+    unique_matches = set()
+    matches = re.finditer(r'\$<\d:([^>]+)>', user_input)
+
+    for match in matches:
+        unique_matches.add(match.group(1))
+
+    for placeholder in unique_matches:
         replacement = session.prompt(f"Enter value for {placeholder}: ")
         user_input = user_input[:match.start()] + replacement + user_input[match.end():]
     return user_input
